@@ -83,33 +83,35 @@ const ShowLocationsMap = ({ id, handleCancel }) => {
   }, []);
 
   useEffect(() => {
-    const map = new maplibregl.Map({
-      container: mapContainerRef.current,
-      style: 'https://demotiles.maplibre.org/style.json',
-      center: [center.lng, center.lat],
-      zoom: 14,
-    });
+    if (mapContainerRef.current) {
+      const map = new maplibregl.Map({
+        container: mapContainerRef.current,
+        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+        center: [center.lng, center.lat],
+        zoom: 14,
+      });
 
-    const markers = [shop, user].map((item) => {
-      const el = document.createElement('div');
-      el.className = 'marker';
-      el.style.backgroundImage = `url(${item === shop ? FaStore : FaUser})`;
-      el.style.width = '50px';
-      el.style.height = '50px';
-      el.style.backgroundSize = '100%';
+      const markers = [shop, user].map((item) => {
+        const el = document.createElement('div');
+        el.className = 'marker';
+        el.style.backgroundImage = `url(${item === shop ? FaStore : FaUser})`;
+        el.style.width = '50px';
+        el.style.height = '50px';
+        el.style.backgroundSize = '100%';
 
-      new maplibregl.Marker(el)
-        .setLngLat([item.lng, item.lat])
-        .addTo(map);
+        new maplibregl.Marker(el)
+          .setLngLat([item.lng, item.lat])
+          .addTo(map);
 
-      return new maplibregl.Marker(el).setLngLat([item.lng, item.lat]);
-    });
+        return new maplibregl.Marker(el).setLngLat([item.lng, item.lat]);
+      });
 
-    const bounds = new maplibregl.LngLatBounds();
-    markers.forEach((marker) => bounds.extend(marker.getLngLat()));
-    map.fitBounds(bounds, { padding: 20 });
+      const bounds = new maplibregl.LngLatBounds();
+      markers.forEach((marker) => bounds.extend(marker.getLngLat()));
+      map.fitBounds(bounds, { padding: 20 });
 
-    return () => map.remove();
+      return () => map.remove();
+    }
   }, [center, shop, user]);
 
   return (

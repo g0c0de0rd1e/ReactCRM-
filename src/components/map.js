@@ -1,12 +1,14 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import pinIcon from '../assets/images/pin.png';
 import getAddressFromLocation from '../helpers/getAddressFromLocation';
 import { BiCurrentLocation } from 'react-icons/bi';
 
 function MapLibreMap(props) {
   const [map, setMap] = useState(null);
   const [loc, setLoc] = useState();
+  const mapContainerRef = useRef(null);
 
   const onClickMap = async (event) => {
     const { lngLat } = event;
@@ -42,8 +44,8 @@ function MapLibreMap(props) {
   useEffect(() => {
     const initializeMap = () => {
       const mapInstance = new maplibregl.Map({
-        container: 'map',
-        style: 'https://demotiles.maplibre.org/style.json',
+        container: mapContainerRef.current,
+        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
         center: [props.location.lng, props.location.lat],
         zoom: 10,
       });
@@ -67,8 +69,17 @@ function MapLibreMap(props) {
     currentLocation();
   }, [map]);
 
+  useEffect(() => {
+    if (map) {
+      map.flyTo({
+        center: [props.location.lng, props.location.lat],
+        essential: true,
+      });
+    }
+  }, [props.location, map]);
+
   return (
-    <div className='map-container' style={{ height: 400, width: '100%' }}>
+    <div className='map-container' style={{ height: 400, width: '100%' }} ref={mapContainerRef}>
       <button
         className='map-button'
         type='button'
@@ -79,7 +90,6 @@ function MapLibreMap(props) {
       >
         <BiCurrentLocation />
       </button>
-      <div id='map' style={{ height: '100%', width: '100%' }}></div>
     </div>
   );
 }

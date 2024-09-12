@@ -35,7 +35,7 @@ const ShowLocationsMap = ({ id: data, handleCancel }) => {
   useEffect(() => {
     const map = new maplibregl.Map({
       container: mapContainerRef.current,
-      style: 'https://demotiles.maplibre.org/style.json',
+      style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
       center: [center.lng, center.lat],
       zoom: 10,
     });

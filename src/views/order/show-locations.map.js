@@ -15,26 +15,6 @@ import { MdRestaurant } from 'react-icons/md';
 import { IoBicycleSharp, IoCheckmarkDoneSharp } from 'react-icons/io5';
 import { AiOutlineCloseCircle } from 'react-icons/ai';
 const { Step } = Steps;
-const User = () => (
-  <div
-    style={{
-      position: 'absolute',
-      transform: 'translate(-50%, -100%)',
-    }}
-  >
-    <img src={FaUser} width='50' alt='Pin' />
-  </div>
-);
-const Store = () => (
-  <div
-    style={{
-      position: 'absolute',
-      transform: 'translate(-50%, -100%)',
-    }}
-  >
-    <img src={FaStore} width='50' alt='Pin' />
-  </div>
-);
 
 const colors = ['blue', 'red', 'gold', 'volcano', 'cyan', 'lime'];
 
@@ -102,119 +82,125 @@ const ShowLocationsMap = ({ id, handleCancel }) => {
   }, []);
 
   useEffect(() => {
-    const map = new maplibregl.Map({
-      container: mapContainerRef.current,
-      style: 'https://demotiles.maplibre.org/style.json',
-      center: [center.lng, center.lat],
-      zoom: 15,
-    });
-
-    const markers = [shop, user].map((item) => {
-      const el = document.createElement('div');
-      el.className = 'marker';
-      el.style.backgroundImage = `url(${item === shop ? FaStore : FaUser})`;
-      el.style.width = '50px';
-      el.style.height = '50px';
-      el.style.backgroundSize = '100%';
-
-      new maplibregl.Marker(el)
-        .setLngLat([item.lng, item.lat])
-        .addTo(map);
-
-      return new maplibregl.Marker(el).setLngLat([item.lng, item.lat]);
-    });
-
-    const bounds = new maplibregl.LngLatBounds();
-    markers.forEach((marker) => bounds.extend(marker.getLngLat()));
-    map.fitBounds(bounds, { padding: 20 });
-
-    return () => map.remove();
+    if (mapContainerRef.current) {
+      console.log('Элемент найден:', mapContainerRef.current);
+      const map = new maplibregl.Map({
+        container: mapContainerRef.current,
+        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+        center: [center.lng, center.lat],
+        zoom: 15,
+      });
+  
+      map.on('load', () => {
+        const markers = [shop, user].map((item) => {
+          const el = document.createElement('div');
+          el.className = 'marker';
+          el.style.backgroundImage = `url(${item === shop ? FaStore : FaUser})`;
+          el.style.width = '50px';
+          el.style.height = '50px';
+          el.style.backgroundSize = '100%';
+  
+          new maplibregl.Marker(el)
+            .setLngLat([item.lng, item.lat])
+            .addTo(map);
+  
+          return new maplibregl.Marker(el).setLngLat([item.lng, item.lat]);
+        });
+  
+        const bounds = new maplibregl.LngLatBounds();
+        markers.forEach((marker) => bounds.extend(marker.getLngLat()));
+        map.fitBounds(bounds, { padding: 20 });
+      });
+  
+      return () => map.remove();
+    } else {
+      console.log('Элемент не найден');
+    }
   }, [center, shop, user]);
 
-  return (
-    <>
-      <Modal
-        visible={!!id}
-        title={t('show.locations')}
-        onCancel={() => handleCancel()}
-        style={{ minWidth: '80vw' }}
-        footer={[
-          <Button type='default' key={'cancelBtn'} onClick={handleCancel}>
-            {t('cancel')}
-          </Button>,
-        ]}
-      >
-        {loading ? (
-          <Loading />
-        ) : (
-          <Card>
-            <Steps current={current} status={status} className='mb-5'>
-              {steps?.map((item, index) => (
-                <Step
-                  title={t(item.name)}
-                  key={item.id + index}
-                  icon={item?.icon}
-                />
-              ))}
-            </Steps>
-            <Row gutter={12}>
-              <Col span={12}>
-                <h3>
-                  {t('order.id')} #{data?.id}
-                </h3>
-                <p>
-                  <BsCalendar2Day /> {data?.created_at}
-                </p>
-                <p>
-                  {t('schedulet.at')} {data?.delivery_date}
-                </p>
-                <span>
-                  <strong>{data?.shop?.translation?.title}</strong>{' '}
-                  {data?.details?.map((details, index) => (
-                    <Tag color={colors[index]}>
-                      {details?.stock?.product.translation.title}
-                    </Tag>
-                  ))}
-                </span>
-              </Col>
-              <Col span={12}>
-                <p>
-                  {t('status')}{' '}
-                  {data?.status === 'new' ? (
-                    <Tag color='blue'>{t(data?.status)}</Tag>
-                  ) : data?.status === 'canceled' ? (
-                    <Tag color='error'>{t(data?.status)}</Tag>
-                  ) : (
-                    <Tag color='cyan'>{t(data?.status)}</Tag>
-                  )}
-                </p>
-                <p>
-                  {t('payment.method')}{' '}
-                  <strong>{data?.transaction?.payment_system?.tag}</strong>
-                </p>
-                <p>
-                  {t('order.type')} <strong>{data?.delivery_type}</strong>
-                </p>
-                <p>
-                  {t('payment.type')}{' '}
-                  <strong>{data?.transaction?.status}</strong>
-                </p>
-              </Col>
+ return (
+  <>
+    <Modal
+      visible={!!id}
+      title={t('show.locations')}
+      onCancel={() => handleCancel()}
+      style={{ minWidth: '80vw' }}
+      footer={[
+        <Button type='default' key={'cancelBtn'} onClick={handleCancel}>
+          {t('cancel')}
+        </Button>,
+      ]}
+    >
+      {loading ? (
+        <Loading />
+      ) : (
+        <Card>
+          <Steps current={current} status={status} className='mb-5'>
+            {steps?.map((item, index) => (
+              <Step
+                title={t(item.name)}
+                key={item.id + index}
+                icon={item?.icon}
+              />
+            ))}
+          </Steps>
+          <Row gutter={12}>
+            <Col span={12}>
+              <h3>
+                {t('order.id')} #{data?.id}
+              </h3>
+              <p>
+                <BsCalendar2Day /> {data?.created_at}
+              </p>
+              <p>
+                {t('schedulet.at')} {data?.delivery_date}
+              </p>
+              <span>
+                <strong>{data?.shop?.translation?.title}</strong>{' '}
+                {data?.details?.map((details, index) => (
+                  <Tag color={colors[index]}>
+                    {details?.stock?.product.translation.title}
+                  </Tag>
+                ))}
+              </span>
+            </Col>
+            <Col span={12}>
+              <p>
+                {t('status')}{' '}
+                {data?.status === 'new' ? (
+                  <Tag color='blue'>{t(data?.status)}</Tag>
+                ) : data?.status === 'canceled' ? (
+                  <Tag color='error'>{t(data?.status)}</Tag>
+                ) : (
+                  <Tag color='cyan'>{t(data?.status)}</Tag>
+                )}
+              </p>
+              <p>
+                {t('payment.method')}{' '}
+                <strong>{data?.transaction?.payment_system?.tag}</strong>
+              </p>
+              <p>
+                {t('order.type')} <strong>{data?.delivery_type}</strong>
+              </p>
+              <p>
+                {t('payment.type')}{' '}
+                <strong>{data?.transaction?.status}</strong>
+              </p>
+            </Col>
 
-              <Col span={24} className='mt-5'>
-                <h4>{t('map')}</h4>
-                <div
-                  className='map-container'
-                  style={{ height: 400, width: '100%' }}
-                  ref={mapContainerRef}
-                ></div>
-              </Col>
-            </Row>
-          </Card>
-        )}
-      </Modal>
-    </>
-  );
-};
-
+            <Col span={24} className='mt-5'>
+              <h4>{t('map')}</h4>
+              <div
+                className='map'
+                style={{ height: 400, width: '100%' }}
+                ref={mapContainerRef}
+              ><p>Проверка контейнера карты</p></div>
+            </Col>
+          </Row>
+        </Card>
+      )}
+    </Modal>
+  </>
+);
+}
 export default ShowLocationsMap;

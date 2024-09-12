@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { BiCurrentLocation } from 'react-icons/bi';
 
 const DrawingManager = (props) => {
+  const mapContainerRef = useRef(null);
   const [map, setMap] = useState(null);
   const [center, setCenter] = useState({
     lat: 38.58799374569842,
@@ -56,8 +57,8 @@ const DrawingManager = (props) => {
   useEffect(() => {
     const initializeMap = () => {
       const mapInstance = new maplibregl.Map({
-        container: 'map',
-        style: 'https://demotiles.maplibre.org/style.json',
+        container: mapContainerRef.current,
+        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
         center: [center.lng, center.lat],
         zoom: 10,
       });
@@ -85,7 +86,7 @@ const DrawingManager = (props) => {
       >
         <BiCurrentLocation />
       </button>
-      <div id='map' style={{ height: '100%', width: '100%' }}></div>
+      <div ref={mapContainerRef} style={{ height: '100%', width: '100%' }}></div>
     </div>
   );
 };

@@ -7,15 +7,22 @@
     <meta name="description" content="Foodyman admin panel" />
     <link rel="shortcut icon" href="%PUBLIC_URL%/favicon.png" />
     <meta name="robots" content="noindex" />
-    <script
-      type="text/javascript"
-      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBbfnvObzwcs6OLXOmSaG9CtIhwjmBwLTQ&callback=initMap"
-    ></script>
     <title>Foodyman</title>
     <link rel="stylesheet" href="./css/login.css" />
+    <link href="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.css" rel="stylesheet" />
     <!--styles-insertion-point-->
   </head>
   <body class="dir-ltr">
     <div id="root"></div>
+    <div id="map" style="width: 100%; height: 100vh;"></div>
+    <script src="https://unpkg.com/maplibre-gl@latest/dist/maplibre-gl.js"></script>
+    <script>
+      const map = new maplibregl.Map({
+        container: 'map',
+        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+        center: [0, 0],
+        zoom: 2
+      });
+    </script>
   </body>
 </html>

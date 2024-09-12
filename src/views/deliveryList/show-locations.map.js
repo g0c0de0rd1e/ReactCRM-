@@ -1,13 +1,22 @@
-import GoogleMapReact from 'google-map-react';
+import React, { useEffect, useRef } from 'react';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 import { Button, Modal } from 'antd';
-import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { shallowEqual, useSelector } from 'react-redux';
-import { MAP_API_KEY } from '../../configs/app-global';
 import FaUser from '../../assets/images/user.jpg';
 import getDefaultLocation from '../../helpers/getDefaultLocation';
 
-const User = () => <img src={FaUser} width='50' alt='Pin' />;
+const User = () => (
+  <div
+    style={{
+      position: 'absolute',
+      transform: 'translate(-50%, -100%)',
+    }}
+  >
+    <img src={FaUser} width='50' alt='Pin' />
+  </div>
+);
 
 const ShowLocationsMap = ({ id: data, handleCancel }) => {
   const { t } = useTranslation();
@@ -21,10 +30,31 @@ const ShowLocationsMap = ({ id: data, handleCancel }) => {
     lng: data?.delivery_man_setting?.location?.longitude,
   };
 
-  const { google_map_key } = useSelector(
-    (state) => state.globalSettings.settings,
-    shallowEqual
-  );
+  const mapContainerRef = useRef(null);
+
+  useEffect(() => {
+    const map = new maplibregl.Map({
+      container: mapContainerRef.current,
+      style: 'https://demotiles.maplibre.org/style.json',
+      center: [center.lng, center.lat],
+      zoom: 10,
+    });
+
+    if (data?.delivery_man_setting) {
+      const el = document.createElement('div');
+      el.className = 'marker';
+      el.style.backgroundImage = `url(${FaUser})`;
+      el.style.width = '50px';
+      el.style.height = '50px';
+      el.style.backgroundSize = '100%';
+
+      new maplibregl.Marker(el)
+        .setLngLat([user.lng, user.lat])
+        .addTo(map);
+    }
+
+    return () => map.remove();
+  }, [center, data, user]);
 
   return (
     <>
@@ -39,22 +69,7 @@ const ShowLocationsMap = ({ id: data, handleCancel }) => {
           </Button>,
         ]}
       >
-        <div className='map-container' style={{ height: 400, width: '100%' }}>
-          <GoogleMapReact
-            bootstrapURLKeys={{
-              key: google_map_key === undefined ? MAP_API_KEY : google_map_key,
-            }}
-            defaultZoom={10}
-            center={center}
-            options={{
-              fullscreenControl: false,
-            }}
-          >
-            {data?.delivery_man_setting !== null ? (
-              <User lat={user?.lat} lng={user?.lng} />
-            ) : null}
-          </GoogleMapReact>
-        </div>
+        <div className='map-container' style={{ height: 400, width: '100%' }} ref={mapContainerRef}></div>
       </Modal>
     </>
   );

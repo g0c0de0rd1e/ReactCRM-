@@ -25,3 +25,21 @@ const orderService = {
 };
 
 export default orderService;
+
+// Функция для обновления списка заказов
+function updateOrders() {
+  orderService.getAll()
+    .then(response => {
+      console.log('Orders updated:', response.data);
+      // Здесь можно обновить состояние или DOM с новыми данными заказов
+    })
+    .catch(error => {
+      console.error('Error updating orders:', error);
+    });
+}
+
+// Запуск обновления каждые 5 секунд
+setInterval(updateOrders, 5000);
+
+// Вызов функции сразу для первоначальной загрузки данных
+updateOrders();

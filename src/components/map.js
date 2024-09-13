@@ -1,20 +1,23 @@
-import React, { useEffect, useState, useRef } from 'react';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import React, { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
 import pinIcon from '../assets/images/pin.png';
 import getAddressFromLocation from '../helpers/getAddressFromLocation';
 import { BiCurrentLocation } from 'react-icons/bi';
+import 'leaflet/dist/leaflet.css';
 
-function MapLibreMap(props) {
-  const [map, setMap] = useState(null);
+const customIcon = new L.Icon({
+  iconUrl: pinIcon,
+  iconSize: [32, 32],
+});
+
+function LeafletMap(props) {
   const [loc, setLoc] = useState();
-  const mapContainerRef = useRef(null);
 
-  const onClickMap = async (event) => {
-    const { lngLat } = event;
+  const onClickMap = async (e) => {
     const location = {
-      lat: lngLat.lat,
-      lng: lngLat.lng,
+      lat: e.latlng.lat,
+      lng: e.latlng.lng,
     };
     props.setLocation(location);
     const address = await getAddressFromLocation(location);
@@ -42,44 +45,18 @@ function MapLibreMap(props) {
   };
 
   useEffect(() => {
-    const initializeMap = () => {
-      const mapInstance = new maplibregl.Map({
-        container: mapContainerRef.current,
-        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-        center: [props.location.lng, props.location.lat],
-        zoom: 10,
-      });
-
-      mapInstance.on('click', onClickMap);
-
-      new maplibregl.Marker({
-        element: document.createElement('div'),
-        anchor: 'bottom',
-      })
-        .setLngLat([props.location.lng, props.location.lat])
-        .addTo(mapInstance);
-
-      setMap(mapInstance);
-    };
-
-    if (!map) {
-      initializeMap();
-    }
-
     currentLocation();
-  }, [map]);
+  }, []);
 
-  useEffect(() => {
-    if (map) {
-      map.flyTo({
-        center: [props.location.lng, props.location.lat],
-        essential: true,
-      });
-    }
-  }, [props.location, map]);
+  const MapEvents = () => {
+    useMapEvents({
+      click: onClickMap,
+    });
+    return null;
+  };
 
   return (
-    <div className='map-container' style={{ height: 400, width: '100%' }} ref={mapContainerRef}>
+    <div className='map-container' style={{ height: 400, width: '100%' }}>
       <button
         className='map-button'
         type='button'
@@ -90,8 +67,24 @@ function MapLibreMap(props) {
       >
         <BiCurrentLocation />
       </button>
+      <MapContainer
+        center={props.location}
+        zoom={12}
+        style={{ height: "100%", width: "100%" }}
+      >
+        <TileLayer
+          attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        <MapEvents />
+        <Marker
+          position={props.location}
+          icon={customIcon}
+          className='marker'
+        />
+      </MapContainer>
     </div>
   );
 }
 
-export default MapLibreMap;
+export default LeafletMap;

@@ -1,11 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import {
+  GoogleApiWrapper,
+  Map,
+  Marker,
+  Polygon,
+  Polyline,
+} from 'google-maps-react';
+import React from 'react';
+import { useState, useEffect } from 'react';
+import { MAP_API_KEY } from '../configs/app-global';
 import { BiCurrentLocation } from 'react-icons/bi';
 
 const DrawingManager = (props) => {
-  const mapContainerRef = useRef(null);
-  const [map, setMap] = useState(null);
   const [center, setCenter] = useState({
     lat: 38.58799374569842,
     lng: -98.47949767583457,
@@ -17,11 +22,11 @@ const DrawingManager = (props) => {
   const [focus, setFocus] = useState(null);
   props.setMerge(finish);
 
-  const onClick = (event) => {
+  const onClick = (t, map, coord) => {
     setFocus(false);
-    const { lngLat } = event;
-    const lat = lngLat.lat;
-    const lng = lngLat.lng;
+    const { latLng } = coord;
+    const lat = latLng.lat();
+    const lng = latLng.lng();
     if (finish) {
       setPolygon([]);
       props.settriangleCoords([{ lat, lng }]);
@@ -35,7 +40,7 @@ const DrawingManager = (props) => {
   const onFinish = (e) => {
     setFinish(props.triangleCoords ? true : false);
     if (
-      props.triangleCoords[0]?.lat === e.lngLat?.lat &&
+      props.triangleCoords[0]?.lat === e.position?.lat &&
       props.triangleCoords.length > 1
     ) {
       setPolygon(props.triangleCoords);
@@ -55,25 +60,30 @@ const DrawingManager = (props) => {
   };
 
   useEffect(() => {
-    const initializeMap = () => {
-      const mapInstance = new maplibregl.Map({
-        container: mapContainerRef.current,
-        style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-        center: [center.lng, center.lat],
-        zoom: 10,
-      });
+    setFocus(true);
+  }, []);
 
-      mapInstance.on('click', onClick);
+  function handleMapReady(_, map) {
+    map.setOptions({
+      draggableCursor: 'crosshair',
+      draggingCursor: 'grab',
+    });
+  }
 
-      setMap(mapInstance);
-    };
+  const markers = props.triangleCoords.map((item) => ({
+    lat: Number(item.lat || '0'),
+    lng: Number(item.lng || '0'),
+  }));
+  // eslint-disable-next-line no-undef
+  var bounds = new props.google.maps.LatLngBounds();
+  for (var i = 0; i < markers.length; i++) {
+    bounds.extend(markers[i]);
+  }
 
-    if (!map) {
-      initializeMap();
-    }
-
-    currentLocation();
-  }, [map]);
+  const OPTIONS = {
+    minZoom: 15,
+    maxZoom: 15,
+  };
 
   return (
     <div className='map-container' style={{ height: 500, width: '100%' }}>
@@ -86,9 +96,59 @@ const DrawingManager = (props) => {
       >
         <BiCurrentLocation />
       </button>
-      <div ref={mapContainerRef} style={{ height: '100%', width: '100%' }}></div>
+      <Map
+        options={OPTIONS}
+        cursor={'pointer'}
+        onClick={onClick}
+        maxZoom={16}
+        minZoom={2}
+        google={props.google}
+        initialCenter={center}
+        center={center}
+        onReady={handleMapReady}
+        bounds={focus && bounds}
+        className='clickable'
+      >
+        {props.triangleCoords?.map((item, idx) => (
+          <Marker
+            onClick={(e) => onFinish(e)}
+            key={idx}
+            position={item}
+            icon={{
+              url: 'https://upload.wikimedia.org/wikipedia/commons/9/94/Circle-image.svg',
+              scaledSize: new props.google.maps.Size(10, 10),
+            }}
+            className='marker'
+          />
+        ))}
+
+        {!polygon?.length ? (
+          <Polyline
+            key={props.triangleCoords?.length}
+            path={props.triangleCoords}
+            strokeColor='black'
+            strokeOpacity={0.8}
+            strokeWeight={3}
+            fillColor='black'
+            fillOpacity={0.35}
+          />
+        ) : (
+          <Polygon
+            key={polygon?.length}
+            path={props.triangleCoords}
+            strokeColor='black'
+            strokeOpacity={0.8}
+            strokeWeight={3}
+            fillColor='black'
+            fillOpacity={0.35}
+          />
+        )}
+      </Map>
     </div>
   );
 };
 
-export default DrawingManager;
+export default GoogleApiWrapper({
+  apiKey: MAP_API_KEY,
+  libraries: ['places'],
+})(DrawingManager);

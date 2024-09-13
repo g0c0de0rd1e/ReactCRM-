@@ -1,33 +1,26 @@
-import React, { useEffect, useRef } from 'react';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import React from 'react';
+import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import { shallowEqual, useSelector } from 'react-redux';
+import 'leaflet/dist/leaflet.css';
 
 export default function MapCustomMarker({ center, handleLoadMap, children }) {
-  const mapContainerRef = useRef(null);
-  const { maplibre_key } = useSelector(
+  const { google_map_key } = useSelector(
     (state) => state.globalSettings.settings,
     shallowEqual
   );
 
-  useEffect(() => {
-    const map = new maplibregl.Map({
-      container: mapContainerRef.current,
-      style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-      center: [center.lng, center.lat],
-      zoom: 12,
-    });
-
-    map.on('load', () => {
-      handleLoadMap(map, maplibregl);
-    });
-
-    return () => map.remove();
-  }, [center, handleLoadMap]);
-
   return (
-    <div ref={mapContainerRef} style={{ height: '100%', width: '100%' }}>
+    <MapContainer
+      center={center}
+      zoom={12}
+      style={{ height: "100vh", width: "100%" }}
+      whenCreated={handleLoadMap}
+    >
+      <TileLayer
+        attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
       {children}
-    </div>
+    </MapContainer>
   );
 }

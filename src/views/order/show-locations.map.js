@@ -1,12 +1,12 @@
-import React, { useState, useEffect, useRef } from 'react';
-import maplibregl from 'maplibre-gl';
-import 'maplibre-gl/dist/maplibre-gl.css';
+import React, { useState, useEffect } from 'react';
 import { Button, Card, Col, Modal, Row, Steps, Tag } from 'antd';
 import { useTranslation } from 'react-i18next';
 import orderService from 'services/order';
 import Loading from 'components/loading';
 import { BsCalendar2Day, BsCheckLg } from 'react-icons/bs';
 import { shallowEqual, useSelector } from 'react-redux';
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import L from 'leaflet';
 import FaUser from 'assets/images/user.jpg';
 import FaStore from 'assets/images/shop.png';
 import getDefaultLocation from 'helpers/getDefaultLocation';
@@ -14,7 +14,29 @@ import { ShoppingCartOutlined } from '@ant-design/icons';
 import { MdRestaurant } from 'react-icons/md';
 import { IoBicycleSharp, IoCheckmarkDoneSharp } from 'react-icons/io5';
 import { AiOutlineCloseCircle } from 'react-icons/ai';
+import 'leaflet/dist/leaflet.css';
+
 const { Step } = Steps;
+
+const User = ({ lat, lng }) => (
+  <Marker
+    position={[lat, lng]}
+    icon={L.icon({
+      iconUrl: FaUser,
+      iconSize: [50, 50],
+    })}
+  />
+);
+
+const Store = ({ lat, lng }) => (
+  <Marker
+    position={[lat, lng]}
+    icon={L.icon({
+      iconUrl: FaStore,
+      iconSize: [50, 50],
+    })}
+  />
+);
 
 const colors = ['blue', 'red', 'gold', 'volcano', 'cyan', 'lime'];
 
@@ -27,7 +49,6 @@ const ShowLocationsMap = ({ id, handleCancel }) => {
     (state) => state.globalSettings,
     shallowEqual,
   );
-  const mapContainerRef = useRef(null);
   const center = getDefaultLocation(settings);
   const [current, setCurrent] = useState(0);
   const [shop, setShop] = useState(getDefaultLocation(settings));
@@ -39,7 +60,6 @@ const ShowLocationsMap = ({ id, handleCancel }) => {
     { id: 3, name: 'on_a_way', icon: <IoBicycleSharp /> },
     { id: 4, name: 'delivered', icon: <IoCheckmarkDoneSharp /> },
   ]);
-  const [isMapInitialized, setIsMapInitialized] = useState(false);
 
   function fetchOrder() {
     setLoading(true);
@@ -78,68 +98,20 @@ const ShowLocationsMap = ({ id, handleCancel }) => {
 
   useEffect(() => {
     fetchOrder();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    console.log('Component mounted');
-    if (!isMapInitialized && mapContainerRef.current) {
-      console.log('Initializing map');
-      const localMapRef = null;
-      try {
-        const map = new maplibregl.Map({
-          container: mapContainerRef.current,
-          style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
-          center: [center.lng, center.lat],
-          zoom: 15,
-        });
-
-        map.on('load', () => {
-          console.log('Map loaded successfully');
-          const markers = [shop, user].map((item) => {
-            const el = document.createElement('div');
-            el.className = 'marker';
-            el.style.backgroundImage = `url(${item === shop ? FaStore : FaUser})`;
-            el.style.width = '50px';
-            el.style.height = '50px';
-            el.style.backgroundSize = '100%';
-
-            new maplibregl.Marker(el)
-              .setLngLat([item.lng, item.lat])
-              .addTo(map);
-
-            return new maplibregl.Marker(el).setLngLat([item.lng, item.lat]);
-          });
-
-          const bounds = new maplibregl.LngLatBounds();
-          markers.forEach((marker) => bounds.extend(marker.getLngLat()));
-          map.fitBounds(bounds, { padding: 20 });
-        });
-
-        map.on('error', (err) => {
-          console.error('Map initialization error:', err);
-        });
-
-        localMapRef = map;
-        setIsMapInitialized(true);
-      } catch (error) {
-        console.error('Error initializing map:', error);
+  const FitBounds = ({ bounds }) => {
+    const map = useMap();
+    useEffect(() => {
+      if (bounds) {
+        map.fitBounds(bounds);
       }
+    }, [map, bounds]);
+    return null;
+  };
 
-      return () => {
-        console.log('Component unmounting');
-        if (localMapRef) {
-          localMapRef.remove();
-        }
-      };
-    }
-  }, [center, shop, user]);
-
-  useEffect(() => {
-    console.log('Component mounted');
-    return () => {
-      console.log('Component unmounted');
-    };
-  }, []);
+  const bounds = L.latLngBounds([shop, user]);
 
   return (
     <>
@@ -214,14 +186,23 @@ const ShowLocationsMap = ({ id, handleCancel }) => {
               <Col span={24} className='mt-5'>
                 <h4>{t('map')}</h4>
                 <div
-                  ref={mapContainerRef}
-                  style={{
-                    height: '400px',
-                    width: '100%',
-                    position: 'relative',
-                  }}
-                ></div>
-
+                  className='map-container'
+                  style={{ height: 400, width: '100%' }}
+                >
+                  <MapContainer
+                    center={center}
+                    zoom={15}
+                    style={{ height: "100%", width: "100%" }}
+                  >
+                    <TileLayer
+                      attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <FitBounds bounds={bounds} />
+                    <Store lat={shop?.lat} lng={shop?.lng} />
+                    <User lat={user?.lat} lng={user?.lng} />
+                  </MapContainer>
+                </div>
               </Col>
             </Row>
           </Card>

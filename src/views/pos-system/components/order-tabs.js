@@ -248,7 +248,7 @@ export default function OrderTabs() {
                   placeholder={t('select.currency')}
                   onSelect={selectCurrency}
                   labelInValue
-                  disabled
+                  // disabled
                   onChange={(e) => {
                     const currency = e;
                     dispatch(

@@ -6,6 +6,7 @@ const initialState = {
   loading: false,
   currencies: [],
   defaultCurrency: {},
+  currentCurrency: {}, // Добавляем текущее состояние валюты
   error: '',
 };
 
@@ -25,6 +26,11 @@ export const fetchRestCurrencies = createAsyncThunk(
 const currencySlice = createSlice({
   name: 'currency',
   initialState,
+  reducers: {
+    setCurrentCurrency: (state, action) => {
+      state.currentCurrency = action.payload;
+    },
+  },
   extraReducers: (builder) => {
     builder.addCase(fetchCurrencies.pending, (state) => {
       state.loading = true;
@@ -34,6 +40,7 @@ const currencySlice = createSlice({
       state.loading = false;
       state.currencies = payload.data;
       state.defaultCurrency = payload.data.find((item) => item.default);
+      state.currentCurrency = state.defaultCurrency; // Устанавливаем текущую валюту по умолчанию
       state.error = '';
     });
     builder.addCase(fetchCurrencies.rejected, (state, action) => {
@@ -45,6 +52,7 @@ const currencySlice = createSlice({
     builder.addCase(fetchRestCurrencies.pending, (state) => {
       state.loading = true;
     });
+    
     builder.addCase(fetchRestCurrencies.fulfilled, (state, action) => {
       const { payload } = action;
       state.loading = false;
@@ -59,5 +67,7 @@ const currencySlice = createSlice({
     });
   },
 });
+
+export const { setCurrentCurrency } = currencySlice.actions;
 
 export default currencySlice.reducer;

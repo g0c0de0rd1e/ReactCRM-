@@ -272,7 +272,7 @@ export default function OrderTabs() {
                   placeholder={t('select.currency')}
                   onSelect={selectCurrency}
                   labelInValue
-                  disabled
+                  // disabled
                 >
                   {currencies?.map((item, index) => (
                     <Select.Option key={index} value={item?.id}>

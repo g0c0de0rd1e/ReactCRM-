@@ -1,4 +1,4 @@
-export default function numberToPrice(number, symbol) {
+export default function numberToPrice(number, symbol='$') {
   if (!number) {
     return '0';
   }

@@ -111,6 +111,15 @@ export default function SellerOrdersBoard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeMenu?.refetch]);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchOrderAllItem();
+    }, 20000);
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleFilter = (item, name) => {
     batch(() => {
       dispatch(clearItems());
@@ -177,6 +186,7 @@ export default function SellerOrdersBoard() {
   };
 
   const fetchOrderAllItem = () => {
+    dispatch(clearItems());
     fetchOrdersCase({ status: 'new' });
     fetchOrdersCase({ status: 'accepted' });
     fetchOrdersCase({ status: 'ready' });

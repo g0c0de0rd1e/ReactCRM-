@@ -106,7 +106,17 @@ export default function SellerOrdersBoard() {
       dispatch(fetchRestOrderStatus());
       dispatch(disableRefetch(activeMenu));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeMenu?.refetch]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchOrderAllItem();
+    }, 20000);
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleFilter = (item, name) => {
     dispatch(
@@ -144,6 +154,7 @@ export default function SellerOrdersBoard() {
   };
 
   const fetchOrderAllItem = () => {
+    dispatch(clearItems());
     fetchOrdersCase({ status: 'new' });
     fetchOrdersCase({ status: 'accepted' });
     fetchOrdersCase({ status: 'ready' });

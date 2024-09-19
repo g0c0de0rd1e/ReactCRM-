@@ -138,6 +138,16 @@ export default function OrderBoard() {
     date_to: dateRange?.[1]?.format('YYYY-MM-DD') || undefined,
   };
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchOrderAllItem();
+    }, 20000);
+
+    return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+
   const orderDelete = () => {
     setLoadingBtn(true);
     const params = {
@@ -267,6 +277,7 @@ export default function OrderBoard() {
   };
 
   const fetchOrderAllItem = () => {
+    dispatch(clearItems());
     fetchOrdersCase({ status: 'new' });
     fetchOrdersCase({ status: 'accepted' });
     fetchOrdersCase({ status: 'ready' });
@@ -292,6 +303,7 @@ export default function OrderBoard() {
 
   useEffect(() => {
     if (activeMenu?.refetch) {
+      dispatch(clearItems());
       dispatch(fetchOrders(paramsData));
       dispatch(disableRefetch(activeMenu));
       dispatch(fetchOrderStatus());

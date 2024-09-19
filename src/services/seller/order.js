@@ -16,18 +16,4 @@ const orderService = {
     request.delete(`dashboard/seller/orders/delete`, { params }),
 };
 
-const fetchOrdersEvery20Seconds = () => {
-  setInterval(() => {
-    orderService.getAll()
-      .then(response => {
-        console.log('Orders fetched:', response.data);
-      })
-      .catch(error => {
-        console.error('Error fetching orders:', error);
-      });
-  }, 20000);
-};
-
-fetchOrdersEvery20Seconds();
-
 export default orderService;
